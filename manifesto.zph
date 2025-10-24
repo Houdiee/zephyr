@@ -1,0 +1,49 @@
+let my_str: Str = "Hello, World!";;
+let my_char: Char = 'a';;
+let my_int: Int = 1;;
+let my_num: Num = 1/3;;
+let my_bool: Bool = false;;
+
+type MyNumber = Num;;
+type Person = {
+	name : Str,
+	age : Int,
+};;
+type BlueKind = LightBlue | Blue | DarkBlue;;
+type Color = Red | Green | Blue { kind: BlueKind };;
+
+let add (a: Num) (b: Num) -> Num = a + b;;
+
+let factorial (n: Int) -> Int = match n
+	| 0 => 1
+	| n => n * factorial (n - 1)
+;;
+
+# No user defined effects can directly depend on OS.
+# This is just an example of what the runtime might be capable of
+# and how it may be implemented "under the hood"
+effect IO depends OS = {
+	let print (s: Str) -> Unit = perform OS.writeStdout s;;
+	let input () -> Str = perform OS.readStdin ();;
+};;
+
+effect Random depends OS = {
+	let randNum () -> Num = perform OS.getTimeBasedRandNum ();;
+};;
+
+# A user defined effect
+effect RandomIO depends Random, IO = {
+	let printRand () -> Unit =
+		let num = perform Random.randNum () in
+		perform IO.print (toStr num)
+	;;
+};;
+
+let printSum (a: Num) (b: Num) -> Unit!{IO} =
+	let sum = add a b in
+	perform print (toStr sum)
+;;
+
+let () -> Unit!{RandomIO} =
+	perform printRand ()
+;;
