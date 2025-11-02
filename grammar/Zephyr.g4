@@ -1,57 +1,47 @@
 grammar Zephyr;
-# TODO: FIX BOILERPLATE
 
 definition
-	: value_definition
-	| type_definition
+	: definition_value
+	| definition_function
+	| definition_alias
+	| definition_record
+	| definition_enum
 	;
 
-value_definition: variable_binding | function_binding;
+definition_value: KW_LET IDENT type_ann? EQ expr;
 
-function_binding: KEYWORD_LET IDENT function_params function_return_sig EQ = expr;
-function_params: LPAREN RPAREN | (LPAREN IDENT type_ann RPAREN)+;
-function_return_sig: ARROW type;
+definition_function: KW_LET IDENT (LIT_UNIT | param+) ARROW type EQ expr;
+param: LPAREN IDENT type_ann RPAREN;
 
-variable_binding_list: variable_binding (COMMA variable_binding)* COMMA?;
-variable_binding: KEYWORD_LET KEYWORD_MUT? IDENT type_ann? EQ expr;
-type_ann: COLON type;
+definition_alias: KW_ALIAS IDENT EQ type;
 
-type_definition
-	: alias_definition
-	| record_definition
-	| enum_definition
-	;
+definition_record: KW_TYPE IDENT EQ record_sig_block;
+record_sig_block: LBRACE record_field_sig (COMMA record_field_sig)* COMMA? RBRACE;
+record_field_sig: IDENT COLON type;
 
-alias_definition: KEYWORD_ALIAS IDENT EQ type;
-
-record_definition: KEYWORD_TYPE IDENT LBRACE record_definition_fields RBRACE;
-record_definition_fields: field_definition (COMMA field_definition)* COMMA?;
-field_definition: IDENT COLON type;
-
-enum_definition: KEYWORD_TYPE IDENT EQ enum_variants;
-enum_variants: BAR? enum_variant (BAR enum_variant*;
+definition_enum: KW_TYPE IDENT EQ BAR? enum_variant (BAR enum_variant)*;
 enum_variant
-	: IDENT
+	: IDENT record_sig_block
 	| IDENT type
-	| IDENT LBRACE record_definition_fields RBRACE
+	| IDENT
 	;
 
-expr_let_in: KEYWORD_LET KEYWORD_MUT? IDENT EQ expr KEYWORD_IN expr;
-expr_if_else: KEYWORD_IF expr KEYWORD_THEN expr (KEYWORD_ELSE expr)?;
-expr_where: expr KEYWORD_WHERE variable_binding_list;
+expr_let_in: KW_LET KW_MUT? IDENT EQ expr KW_IN expr;
+expr_if_else: KW_IF expr KW_THEN expr (KW_ELSE expr)?;
+expr_where: expr KW_WHERE variable_binding_list;
 
-KEYWORD_LET: 'let';
-KEYWORD_MUT: 'mut';
-KEYWORD_IN: 'in';
-KEYWORD_IF: 'if';
-KEYWORD_THEN: 'then';
-KEYWORD_ELSE: 'else';
-KEYWORD_MATCH: 'match';
-KEYWORD_WHERE: 'where';
-KEYWORD_FUN: 'fun';
-KEYWORD_TYPE: 'type';
-KEYWORD_ALIAS: 'alias';
-KEYWORD_PERFORM: 'perform';
+KW_LET: 'let';
+KW_MUT: 'mut';
+KW_IN: 'in';
+KW_IF: 'if';
+KW_THEN: 'then';
+KW_ELSE: 'else';
+KW_MATCH: 'match';
+KW_WHERE: 'where';
+KW_FUN: 'fun';
+KW_TYPE: 'type';
+KW_ALIAS: 'alias';
+KW_PERFORM: 'perform';
 
 TYPE_INT: 'Int';
 TYPE_DEC: 'Dec';
@@ -66,6 +56,7 @@ LIT_DEC: [0-9]+ '.' [0-9]+;
 LIT_CHAR: '\'' ~['\r\n] '\'';
 LIT_STR: '"' (~['\r\n])* '"';
 LIT_BOOL: 'true' | 'false';
+LIT_UNIT: '()';
 
 IDENT: [a-zA-Z] [a-zA-Z0-9]+; 
 
